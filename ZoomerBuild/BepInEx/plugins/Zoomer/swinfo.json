@@ -1,0 +1,13 @@
+{
+  "mod_id": "Zoomer",
+  "name": "Zoomer",
+  "author": "Halban",
+  "description": "Zoom the camera in and out by holding alt and moving the scroll wheel.",
+  "source": "https://github.com/Halbann/Zoomer",
+  "version": "v0.4.0",
+  "dependencies": [],
+  "ksp2_version": {
+    "min": "0",
+    "max": "1"
+  }
+}
