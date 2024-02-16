@@ -8,6 +8,10 @@ using KSP.Game;
 using BepInEx;
 using SpaceWarp;
 using SpaceWarp.API.Mods;
+using KSP.Input;
+using UnityEngine.InputSystem;
+using System.Reflection;
+using UnityEngine.InputSystem.Composites;
 
 namespace Zoomer
 {
@@ -56,23 +60,25 @@ namespace Zoomer
 
         void Update()
         {
-            // Disable mouse wheel on entering zoom adjustment.
+
             if (Input.GetKeyDown(KeyCode.LeftAlt))
             {
-                SessionManager.AXIS_MOUSEWHEEL.axisBinding.primary.scale = 0;
+                Game.Input.Flight.CameraZoom.Disable();
             }
+
+
 
             if (Input.GetKey(KeyCode.LeftAlt))
             {
                 FOV += Input.GetAxis("Mouse ScrollWheel") * 5f;
             }
-            else if (SessionManager.AXIS_MOUSEWHEEL.axisBinding.primary.scale == 0)
+            else if (!Input.GetKey(KeyCode.LeftAlt))
             {
                 // Enable mouse wheel on exiting zoom adjustment.
-                SessionManager.AXIS_MOUSEWHEEL.axisBinding.primary.scale = 1;
+                Game.Input.Flight.CameraZoom.Enable();
             }
 
-            if (Input.GetKeyDown(KeyCode.Mouse2))
+            if (Input.GetMouseButtonDown(2)) // 2 corresponds to the middle mouse button
             {
                 if (Time.realtimeSinceStartup - lastClicked < 0.33f)
                 {
@@ -80,14 +86,14 @@ namespace Zoomer
                     _fov = defaultFOV;
                     Logger.LogInfo($"Reset FOV to {defaultFOV}");
 
-                    SessionManager.MOUSE_MIDDLE.keyBinding.primary = null;
-
                     GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.ResetGimbalAndCamera(true);
                     GameManager.Instance.Game.CameraManager.FlightCamera.ResetCameraTweakables();
                     GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.RefreshShot();
                 }
                 else
+                {
                     lastClicked = Time.realtimeSinceStartup;
+                }
             }
         }
 
