@@ -8,6 +8,7 @@ using KSP.Game;
 using BepInEx;
 using SpaceWarp;
 using SpaceWarp.API.Mods;
+using JetBrains.Annotations;
 
 namespace Zoomer
 {
@@ -19,30 +20,37 @@ namespace Zoomer
         public const string ModName = "Zoomer";
         public const string ModVer = MyPluginInfo.PLUGIN_VERSION;
 
+        /// Singleton instance of the plugin class
+        [PublicAPI]
+        public static Zoomer Instance { get; set; }
+
+        private static bool sceneValid = false;
+
         #region Fields
 
         // GUI.
-        private static GameState[] validScenes = new[] { GameState.FlightView, GameState.Map3DView };
+        //private static GameState[] validScenes = new[] { GameState.FlightView, GameState.Map3DView };
+        private static GameState[] validScenes = new[] { GameState.FlightView };
         private static bool ValidScene => validScenes.Contains(GameManager.Instance.Game.GlobalGameState.GetState());
 
         // FOV.
 
-        float defaultFOV = 60f;
+        public float defaultFOV = 60f;
         float _fov = 60f;
-        float FOV
+        public float FOV
         {
             get => _fov;
             set
             {
                 if (_fov != value)
                 {
-                    _fov = Mathf.Clamp(value, 5, 90);
+                    _fov = Mathf.Clamp(value, 5, 100);
                     SetFOV(_fov);
                 }
             }
         }
 
-        float lastClicked = Time.time;
+        private float lastClicked = Time.time;
 
         #endregion
 
@@ -50,53 +58,77 @@ namespace Zoomer
 
         public override void OnInitialized()
         {
-            gameObject.hideFlags = HideFlags.HideAndDontSave;
-            DontDestroyOnLoad(gameObject);
+            Instance = this;
+        }
+
+        private bool CheckScene()
+        {
+            // Checks to make sure we're in a valid scene.
+
+            bool previous = sceneValid;
+            sceneValid = ValidScene;
+
+            if (sceneValid != previous && !sceneValid)
+            {
+                ResetFOV();
+            }
+
+            return sceneValid;
         }
 
         void Update()
         {
-            // Disable mouse wheel on entering zoom adjustment.
+            if (!CheckScene())
+                return;
+
+            // Disable the game's distance adjustment when the zoom adjustment key is held.
             if (Input.GetKeyDown(KeyCode.LeftAlt))
             {
-                SessionManager.AXIS_MOUSEWHEEL.axisBinding.primary.scale = 0;
+                Game.Input.Flight.CameraZoom.Disable();
             }
 
             if (Input.GetKey(KeyCode.LeftAlt))
             {
-                FOV += Input.GetAxis("Mouse ScrollWheel") * 5f;
-            }
-            else if (SessionManager.AXIS_MOUSEWHEEL.axisBinding.primary.scale == 0)
-            {
-                // Enable mouse wheel on exiting zoom adjustment.
-                SessionManager.AXIS_MOUSEWHEEL.axisBinding.primary.scale = 1;
-            }
+                // Adjust FOV with mouse wheel when zoom adjustment key is held.
 
-            if (Input.GetKeyDown(KeyCode.Mouse2))
+                FOV += Input.GetAxis("Mouse ScrollWheel") * 10f;
+            }
+            else if (!Game.Input.Flight.CameraZoom.enabled)
             {
+                // Re-enable mouse wheel on exiting zoom adjustment.
+
+                Game.Input.Flight.CameraZoom.Enable();
+            }
+            else if (Input.GetMouseButtonDown(2)) // 2 corresponds to the middle mouse button
+            {
+                // Keep track of double-clicks to reset FOV.
+
                 if (Time.realtimeSinceStartup - lastClicked < 0.33f)
                 {
-                    //FOV = defaultFOV;
-                    _fov = defaultFOV;
+                    ResetFOV();
                     Logger.LogInfo($"Reset FOV to {defaultFOV}");
 
-                    SessionManager.MOUSE_MIDDLE.keyBinding.primary = null;
-
                     GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.ResetGimbalAndCamera(true);
-                    GameManager.Instance.Game.CameraManager.FlightCamera.ResetCameraTweakables();
-                    GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.RefreshShot();
                 }
                 else
+                {
                     lastClicked = Time.realtimeSinceStartup;
+                }
             }
         }
 
         #endregion
 
         #region Functions
+
         void SetFOV(float fov)
         {
             GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.SetCameraFieldOfView(fov);
+        }
+
+        void ResetFOV()
+        {
+            FOV = defaultFOV;
         }
 
         #endregion

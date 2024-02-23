@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <Version>0.4.0</Version>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,17 +34,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>G:\Games\Steam Library\steamapps\common\Kerbal Space Program 2\KSP2_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>References\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>G:\Games\Steam Library\steamapps\common\Kerbal Space Program 2\BepInEx\core\BepInEx.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>References\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="SpaceWarp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Games\Steam Library\steamapps\common\Kerbal Space Program 2\BepInEx\plugins\SpaceWarp\SpaceWarp.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="SpaceWarp">
+      <HintPath>References\SpaceWarp.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceWarp.Core">
+      <HintPath>References\SpaceWarp.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -53,17 +53,20 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="Unity.InputSystem">
+      <HintPath>References\Unity.InputSystem.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>G:\Games\Steam Library\steamapps\common\Kerbal Space Program 2\KSP2_x64_Data\Managed\UnityEngine.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>References\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>G:\Games\Steam Library\steamapps\common\Kerbal Space Program 2\KSP2_x64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>References\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>G:\Games\Steam Library\steamapps\common\Kerbal Space Program 2\KSP2_x64_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>References\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputModule">
+      <HintPath>References\UnityEngine.InputModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
