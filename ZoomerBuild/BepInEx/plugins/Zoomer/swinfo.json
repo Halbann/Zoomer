@@ -1,13 +1,23 @@
 {
+  "spec": "2.0",
   "mod_id": "Zoomer",
+  "author": "Halban, IsaQuest",
   "name": "Zoomer",
-  "author": "Halban",
-  "description": "Zoom the camera in and out by holding alt and moving the scroll wheel.",
+  "description": "Zoom the camera in and out by holding ALT and moving the scroll wheel.",
   "source": "https://github.com/Halbann/Zoomer",
-  "version": "v0.4.0",
-  "dependencies": [],
+  "version": "0.1.0",
+  "version_check": "https://raw.githubusercontent.com/Halbann/Zoomer/main/plugin_template/swinfo.json",
   "ksp2_version": {
-    "min": "0",
-    "max": "1"
-  }
+    "min": "0.2.0",
+    "max": "*"
+  },
+  "dependencies": [
+    {
+      "id": "com.github.x606.spacewarp",
+      "version": {
+        "min": "1.8.0",
+        "max": "*"
+      }
+    }
+  ]
 }

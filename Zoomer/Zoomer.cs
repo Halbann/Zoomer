@@ -8,6 +8,7 @@ using KSP.Game;
 using BepInEx;
 using SpaceWarp;
 using SpaceWarp.API.Mods;
+using SpaceWarp.API.Game;
 using JetBrains.Annotations;
 
 namespace Zoomer
@@ -28,24 +29,19 @@ namespace Zoomer
 
         #region Fields
 
-        // GUI.
-        //private static GameState[] validScenes = new[] { GameState.FlightView, GameState.Map3DView };
-        private static GameState[] validScenes = new[] { GameState.FlightView };
-        private static bool ValidScene => validScenes.Contains(GameManager.Instance.Game.GlobalGameState.GetState());
-
         // FOV.
 
-        public float defaultFOV = 60f;
-        float _fov = 60f;
-        public float FOV
+        public double defaultFOV = 60f;
+
+        public double FOV
         {
-            get => _fov;
+            get => Game.CameraManager.FlightCamera.Shot.FieldOfView;
             set
             {
-                if (_fov != value)
+                if (FOV != value)
                 {
-                    _fov = Mathf.Clamp(value, 5, 100);
-                    SetFOV(_fov);
+                    double fov = Math.Min(Math.Max(value, 5), 100);
+                    SetFOV(fov);
                 }
             }
         }
@@ -59,6 +55,9 @@ namespace Zoomer
         public override void OnInitialized()
         {
             Instance = this;
+
+            SpaceWarp.API.Game.Messages.StateChanges.FlightViewEntered += m => sceneValid = true;
+            SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => sceneValid = false;
         }
 
         private bool CheckScene()
@@ -66,7 +65,6 @@ namespace Zoomer
             // Checks to make sure we're in a valid scene.
 
             bool previous = sceneValid;
-            sceneValid = ValidScene;
 
             if (sceneValid != previous && !sceneValid)
             {
@@ -106,9 +104,8 @@ namespace Zoomer
                 if (Time.realtimeSinceStartup - lastClicked < 0.33f)
                 {
                     ResetFOV();
-                    Logger.LogInfo($"Reset FOV to {defaultFOV}");
 
-                    GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.ResetGimbalAndCamera(true);
+                    Game.CameraManager.FlightCamera.ActiveSolution.ResetGimbalAndCamera(true);
                 }
                 else
                 {
@@ -121,14 +118,16 @@ namespace Zoomer
 
         #region Functions
 
-        void SetFOV(float fov)
+        void SetFOV(double fov)
         {
             GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.SetCameraFieldOfView(fov);
+            //Logger.LogInfo($"Set FOV to {fov}");
         }
 
         void ResetFOV()
         {
             FOV = defaultFOV;
+            //Logger.LogInfo($"Reset FOV to {defaultFOV}");
         }
 
         #endregion

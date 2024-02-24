@@ -45,6 +45,9 @@
     <Reference Include="SpaceWarp.Core">
       <HintPath>References\SpaceWarp.Core.dll</HintPath>
     </Reference>
+    <Reference Include="SpaceWarp.Game">
+      <HintPath>References\SpaceWarp.Game.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
