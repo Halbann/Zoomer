@@ -35,18 +35,23 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>References\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>References\BepInEx.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceWarp">
       <HintPath>References\SpaceWarp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceWarp.Core">
       <HintPath>References\SpaceWarp.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceWarp.Game">
       <HintPath>References\SpaceWarp.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,18 +63,23 @@
     <Reference Include="System.Xml" />
     <Reference Include="Unity.InputSystem">
       <HintPath>References\Unity.InputSystem.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>References\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>References\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>References\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.InputModule">
       <HintPath>References\UnityEngine.InputModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>

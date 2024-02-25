@@ -17,9 +17,9 @@ namespace Zoomer
     [BepInPlugin(ModGuid, ModName, ModVer)]
     public class Zoomer : BaseSpaceWarpPlugin
     {
-        public const string ModGuid = "com.github.halbann.zoomer";
+        public const string ModGuid = "Zoomer";
         public const string ModName = "Zoomer";
-        public const string ModVer = MyPluginInfo.PLUGIN_VERSION;
+        public const string ModVer = "0.1.0";
 
         /// Singleton instance of the plugin class
         [PublicAPI]
