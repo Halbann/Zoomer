@@ -1,25 +1,22 @@
-using System;
-using System.Linq;
-
-using UnityEngine;
-using KSP.Sim.ResourceSystem;
-using KSP.Game;
-
 using BepInEx;
+using BepInEx.Logging;
+using JetBrains.Annotations;
+using KSP.Game;
+using KSP.Messages;
 using SpaceWarp;
 using SpaceWarp.API.Mods;
-using SpaceWarp.API.Game;
-using JetBrains.Annotations;
+using System;
+using UnityEngine;
 
 namespace Zoomer
 {
-    [BepInDependency(SpaceWarpPlugin.ModGuid,SpaceWarpPlugin.ModVer)]
+    [BepInDependency(SpaceWarpPlugin.ModGuid, SpaceWarpPlugin.ModVer)]
     [BepInPlugin(ModGuid, ModName, ModVer)]
     public class Zoomer : BaseSpaceWarpPlugin
     {
-        public const string ModGuid = "Zoomer";
+        public const string ModGuid = "com.github.halbann.zoomer";
         public const string ModName = "Zoomer";
-        public const string ModVer = "0.1.0";
+        public const string ModVer = MyPluginInfo.PLUGIN_VERSION;
 
         /// Singleton instance of the plugin class
         [PublicAPI]
@@ -32,6 +29,7 @@ namespace Zoomer
         // FOV.
 
         public double defaultFOV = 60f;
+        public GameState CurrentGameState => (GameState)(GameManager.Instance?.Game?.GlobalGameState?.GetGameState().GameState);
 
         public double FOV
         {
@@ -59,7 +57,6 @@ namespace Zoomer
             SpaceWarp.API.Game.Messages.StateChanges.FlightViewEntered += m => sceneValid = true;
             SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => sceneValid = false;
         }
-
         private bool CheckScene()
         {
             // Checks to make sure we're in a valid scene.
@@ -69,6 +66,7 @@ namespace Zoomer
             if (sceneValid != previous && !sceneValid)
             {
                 ResetFOV();
+                ResetPan();
             }
 
             return sceneValid;
@@ -78,6 +76,13 @@ namespace Zoomer
         {
             if (!CheckScene())
                 return;
+
+            SpaceWarp.API.Game.Messages.StateChanges.FlightViewEntered += m => sceneValid = true;
+            SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => sceneValid = false;
+
+            // Find the Flight Camera in the scene for camera panning
+            GameObject flightCameraObject = GameObject.Find("FlightCameraPhysics_Main");
+            GameObject scaledCameraObject = GameObject.Find("FlightCameraScaled_Main");
 
             // Disable the game's distance adjustment when the zoom adjustment key is held.
             if (Input.GetKeyDown(KeyCode.LeftAlt))
@@ -99,20 +104,51 @@ namespace Zoomer
             }
             else if (Input.GetMouseButtonDown(2)) // 2 corresponds to the middle mouse button
             {
-                // Keep track of double-clicks to reset FOV.
+                // Keep track of double-clicks to reset Camera.
 
                 if (Time.realtimeSinceStartup - lastClicked < 0.33f)
                 {
                     ResetFOV();
-
                     Game.CameraManager.FlightCamera.ActiveSolution.ResetGimbalAndCamera(true);
+                    ResetPan();
                 }
                 else
                 {
                     lastClicked = Time.realtimeSinceStartup;
                 }
             }
+            if (Input.GetMouseButton(2)) // Middle mouse button
+            {
+                // Panning Axis and Speed controls
+                float panSpeed = 0.25f;
+                Vector3 pan = new Vector3(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"), 0) * panSpeed;
+
+
+                if (flightCameraObject != null)
+                {
+                    // Get the current rotation 
+                    Quaternion currentRotation = flightCameraObject.transform.localRotation;
+
+                    // Use pan vec to set the new rotation
+                    Quaternion newRotation = Quaternion.Euler(pan) * currentRotation;
+
+                    // Set the new rotation to the cameras
+                    flightCameraObject.transform.localRotation = newRotation;
+                    scaledCameraObject.transform.localRotation = newRotation;
+                }
+                Game.Messages.PersistentSubscribe<GameStateEnteredMessage>(msg =>
+                {
+                    var message = msg as GameStateEnteredMessage;
+                    switch (message != null ? message.StateBeingEntered : default)
+                    {
+                        case GameState.KerbalSpaceCenter:
+                            ResetPan();
+                            break;
+                    }
+                });
+            }
         }
+
 
         #endregion
 
@@ -129,7 +165,19 @@ namespace Zoomer
             FOV = defaultFOV;
             //Logger.LogInfo($"Reset FOV to {defaultFOV}");
         }
+        void ResetPan()
+        {
+            // Find the Flight Camera in the scene for camera panning
+            GameObject flightCameraObject = GameObject.Find("FlightCameraPhysics_Main");
+            GameObject scaledCameraObject = GameObject.Find("FlightCameraScaled_Main");
 
+            // Reset the local rotations of flightCameraObject and scaledCameraObject
+            if (flightCameraObject != null && scaledCameraObject != null)
+            {
+                flightCameraObject.transform.localRotation = Quaternion.identity;
+                scaledCameraObject.transform.localRotation = Quaternion.identity;
+            }
+        }
         #endregion
     }
 }
