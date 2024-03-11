@@ -1,22 +1,25 @@
-using BepInEx;
-using BepInEx.Logging;
-using JetBrains.Annotations;
+using System;
+using System.Linq;
+
+using UnityEngine;
+using KSP.Sim.ResourceSystem;
 using KSP.Game;
-using KSP.Messages;
+
+using BepInEx;
 using SpaceWarp;
 using SpaceWarp.API.Mods;
-using System;
-using UnityEngine;
+using SpaceWarp.API.Game;
+using JetBrains.Annotations;
 
 namespace Zoomer
 {
-    [BepInDependency(SpaceWarpPlugin.ModGuid, SpaceWarpPlugin.ModVer)]
+    [BepInDependency(SpaceWarpPlugin.ModGuid,SpaceWarpPlugin.ModVer)]
     [BepInPlugin(ModGuid, ModName, ModVer)]
     public class Zoomer : BaseSpaceWarpPlugin
     {
-        public const string ModGuid = "com.github.halbann.zoomer";
+        public const string ModGuid = "Zoomer";
         public const string ModName = "Zoomer";
-        public const string ModVer = MyPluginInfo.PLUGIN_VERSION;
+        public const string ModVer = "0.1.0";
 
         /// Singleton instance of the plugin class
         [PublicAPI]
