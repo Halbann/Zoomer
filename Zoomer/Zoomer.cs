@@ -1,14 +1,15 @@
 using System;
-using System.Linq;
 
 using UnityEngine;
-using KSP.Sim.ResourceSystem;
+
 using KSP.Game;
+using KSP.Rendering;
+using KSP.Sim;
 
 using BepInEx;
 using SpaceWarp;
 using SpaceWarp.API.Mods;
-using SpaceWarp.API.Game;
+
 using JetBrains.Annotations;
 
 namespace Zoomer
@@ -19,7 +20,7 @@ namespace Zoomer
     {
         public const string ModGuid = "Zoomer";
         public const string ModName = "Zoomer";
-        public const string ModVer = "0.1.0";
+        public const string ModVer = "0.2.0";
 
         /// Singleton instance of the plugin class
         [PublicAPI]
@@ -32,7 +33,6 @@ namespace Zoomer
         // FOV.
 
         public double defaultFOV = 60f;
-        public GameState CurrentGameState => (GameState)(GameManager.Instance?.Game?.GlobalGameState?.GetGameState().GameState);
 
         public double FOV
         {
@@ -49,6 +49,42 @@ namespace Zoomer
 
         private float lastClicked = Time.time;
 
+        // Pan.
+
+        private GameObject _physicsCameraObject;
+        public GameObject PhysicsCameraObject
+        {
+            get
+            {
+                if (_physicsCameraObject == null)
+                {
+                    var stack = Game.CameraManager
+                        .GetCameraRenderStack(CameraID.Flight, RenderSpaceType.PhysicsSpace);
+
+                    _physicsCameraObject = stack.GetMainRenderCamera().gameObject;
+                }
+
+                return _physicsCameraObject;
+            }
+        }
+
+        private GameObject _scaledCameraObject;
+        public GameObject ScaledCameraObject
+        {
+            get
+            {
+                if (_scaledCameraObject == null)
+                {
+                    var stack = Game.CameraManager
+                        .GetCameraRenderStack(CameraID.Flight, RenderSpaceType.ScaleSpace);
+
+                    _scaledCameraObject = stack.GetMainRenderCamera().gameObject;
+                }
+
+                return _scaledCameraObject;
+            }
+        }
+
         #endregion
 
         #region Main
@@ -59,7 +95,9 @@ namespace Zoomer
 
             SpaceWarp.API.Game.Messages.StateChanges.FlightViewEntered += m => sceneValid = true;
             SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => sceneValid = false;
+            SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => ResetPan();
         }
+
         private bool CheckScene()
         {
             // Checks to make sure we're in a valid scene.
@@ -75,18 +113,21 @@ namespace Zoomer
             return sceneValid;
         }
 
-        void Update()
+        internal void Update()
         {
             if (!CheckScene())
                 return;
 
-            SpaceWarp.API.Game.Messages.StateChanges.FlightViewEntered += m => sceneValid = true;
-            SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => sceneValid = false;
+            ZoomUpdate();
+            PanUpdate();
+        }
 
-            // Find the Flight Camera in the scene for camera panning
-            GameObject flightCameraObject = GameObject.Find("FlightCameraPhysics_Main");
-            GameObject scaledCameraObject = GameObject.Find("FlightCameraScaled_Main");
+        #endregion
 
+        #region Functions
+
+        private void ZoomUpdate()
+        {
             // Disable the game's distance adjustment when the zoom adjustment key is held.
             if (Input.GetKeyDown(KeyCode.LeftAlt))
             {
@@ -111,74 +152,76 @@ namespace Zoomer
 
                 if (Time.realtimeSinceStartup - lastClicked < 0.33f)
                 {
-                    ResetFOV();
-                    Game.CameraManager.FlightCamera.ActiveSolution.ResetGimbalAndCamera(true);
-                    ResetPan();
+                    ResetFlightCamera();
                 }
                 else
                 {
                     lastClicked = Time.realtimeSinceStartup;
                 }
             }
-            if (Input.GetMouseButton(2)) // Middle mouse button
-            {
-                // Panning Axis and Speed controls
-                float panSpeed = 0.25f;
-                Vector3 pan = new Vector3(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"), 0) * panSpeed;
-
-
-                if (flightCameraObject != null)
-                {
-                    // Get the current rotation 
-                    Quaternion currentRotation = flightCameraObject.transform.localRotation;
-
-                    // Use pan vec to set the new rotation
-                    Quaternion newRotation = Quaternion.Euler(pan) * currentRotation;
-
-                    // Set the new rotation to the cameras
-                    flightCameraObject.transform.localRotation = newRotation;
-                    scaledCameraObject.transform.localRotation = newRotation;
-                }
-                Game.Messages.PersistentSubscribe<GameStateEnteredMessage>(msg =>
-                {
-                    var message = msg as GameStateEnteredMessage;
-                    switch (message != null ? message.StateBeingEntered : default)
-                    {
-                        case GameState.KerbalSpaceCenter:
-                            ResetPan();
-                            break;
-                    }
-                });
-            }
         }
 
+        private void PanUpdate()
+        {
+            // Panning
+            if (!Input.GetMouseButton(2)) // Middle mouse button
+                return;
 
-        #endregion
+            // Panning Axis and Speed controls
+            float panSpeed = 0.25f;
+            Vector3 pan = new Vector3(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"), 0) * panSpeed;
 
-        #region Functions
+            PanCamera(pan);
+        }
 
-        void SetFOV(double fov)
+        public void ResetFlightCamera()
+        {
+            ResetFOV();
+            ResetPan();
+            Game.CameraManager.FlightCamera.ActiveSolution.ResetGimbalAndCamera(true);
+        }
+
+        public void SetFOV(double fov)
         {
             GameManager.Instance.Game.CameraManager.FlightCamera.ActiveSolution.SetCameraFieldOfView(fov);
             //Logger.LogInfo($"Set FOV to {fov}");
         }
 
-        void ResetFOV()
+        public void ResetFOV()
         {
             FOV = defaultFOV;
             //Logger.LogInfo($"Reset FOV to {defaultFOV}");
         }
-        void ResetPan()
-        {
-            // Find the Flight Camera in the scene for camera panning
-            GameObject flightCameraObject = GameObject.Find("FlightCameraPhysics_Main");
-            GameObject scaledCameraObject = GameObject.Find("FlightCameraScaled_Main");
 
+        public void PanCamera(Vector3 pan)
+        {
+            if (PhysicsCameraObject == null)
+                return;
+
+            // Get the current rotation 
+            Quaternion currentRotation = PhysicsCameraObject.transform.localRotation;
+
+            // Use pan vec to set the new rotation
+            Quaternion newRotation = Quaternion.Euler(pan) * currentRotation;
+
+            // Re-orient so that we don't change the roll of the camera.
+            // This is subjective but it's how KSP1 does it and it means that camera doesn't
+            // gradually induce more and more roll as you pan back and forth.
+            // A given input will always result in the same final camera orientation.
+            newRotation.eulerAngles = new Vector3(newRotation.eulerAngles.x, newRotation.eulerAngles.y, 0);
+
+            // Set the new rotation to the cameras
+            PhysicsCameraObject.transform.localRotation = newRotation;
+            ScaledCameraObject.transform.localRotation = newRotation;
+        }
+
+        public void ResetPan()
+        {
             // Reset the local rotations of flightCameraObject and scaledCameraObject
-            if (flightCameraObject != null && scaledCameraObject != null)
+            if (PhysicsCameraObject != null && ScaledCameraObject != null)
             {
-                flightCameraObject.transform.localRotation = Quaternion.identity;
-                scaledCameraObject.transform.localRotation = Quaternion.identity;
+                PhysicsCameraObject.transform.localRotation = Quaternion.identity;
+                ScaledCameraObject.transform.localRotation = Quaternion.identity;
             }
         }
         #endregion
