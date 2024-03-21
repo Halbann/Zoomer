@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 
 using UnityEngine;
 
 using KSP.Game;
 using KSP.Rendering;
 using KSP.Sim;
+using KSP.Input;
 
 using BepInEx;
 using SpaceWarp;
@@ -96,6 +98,16 @@ namespace Zoomer
             SpaceWarp.API.Game.Messages.StateChanges.FlightViewEntered += m => sceneValid = true;
             SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => sceneValid = false;
             SpaceWarp.API.Game.Messages.StateChanges.FlightViewLeft += m => ResetPan();
+
+
+            // There is no event for toggling UI visibility, so we listen to events that can trigger it.
+
+            GlobalInputDefinition globalInputDefinition;
+            if (Game.InputManager.TryGetInputDefinition<GlobalInputDefinition>(out globalInputDefinition))
+            {
+                globalInputDefinition.BindAction(Game.Input.Global.TogglePauseMenu.name, new Action(OnToggleEscapeMenu));
+                globalInputDefinition.BindAction(Game.Input.Global.ToggleUIVisibility.name, new Action(OnToggleUIVisibility));
+            }
         }
 
         private bool CheckScene()
@@ -224,6 +236,50 @@ namespace Zoomer
                 ScaledCameraObject.transform.localRotation = Quaternion.identity;
             }
         }
+
+        #endregion
+
+        #region Outlines
+
+        private void OnToggleEscapeMenu() =>
+            StartCoroutine(OnUIVisibilityChange());
+
+        private void OnToggleUIVisibility() =>
+            StartCoroutine(OnUIVisibilityChange());
+
+
+        private IEnumerator OnUIVisibilityChange()
+        {
+            yield return null;
+
+            var viewController = GameManager.Instance.Game.UI.ViewController;
+
+            if (viewController.CurrentView == UIStateViews.UIHiddenView)
+            {
+                Debug.Log("UI is hidden");
+                ToggleOutlineVisibility(false);
+            }
+            else
+            {
+                Debug.Log("UI is not hidden");
+                ToggleOutlineVisibility(true);
+            }
+        }
+
+        public void ToggleOutlineVisibility(bool visible)
+        {
+            // Hide the green outline around parts when the UI is hidden.
+
+            if (PhysicsCameraObject == null)
+                return;
+
+            var outliner = PhysicsCameraObject.GetComponent<KSP.OutlineEffect>();
+            if (outliner == null)
+                return;
+
+            outliner.enabled = visible;
+        }
+
         #endregion
     }
 }

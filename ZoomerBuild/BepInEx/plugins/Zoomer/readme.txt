@@ -1,6 +1,12 @@
-# Zoomer v0.1.0
+# Zoomer v0.2.0
 
-Zoomer brings back the old zoom functionality from KSP1. Simply hold ALT and use the scroll wheel. Press the middle mouse button twice to reset the camera.
+Zoomer brings back the old zoom and panning functionality from KSP1. 
+
+- Hold ALT and move the scroll wheel to zoom. 
+- Hold the middle mouse button and drag to pan.
+- Press the middle mouse button twice to reset the camera. 
+
+Zoomer also hides part outlines when the UI is hidden.
 
 # Installation
 
@@ -11,6 +17,11 @@ https://spacedock.info/mod/3277/Space%20Warp%20+%20BepInEx
 
 Download Zoomer, open the zip file, and drag the included `BepInEx` folder into the game folder.
 
+# Changelog
+
+## 0.2.0
+- Added KSP1 style panning.
+- Hides the green part outlines when the UI is hidden with F2.
 
 # Contributors
 

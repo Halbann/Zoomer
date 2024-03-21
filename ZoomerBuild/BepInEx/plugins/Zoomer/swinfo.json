@@ -5,7 +5,7 @@
   "name": "Zoomer",
   "description": "Zoom the camera in and out by holding ALT and moving the scroll wheel.",
   "source": "https://github.com/Halbann/Zoomer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "version_check": "https://raw.githubusercontent.com/Halbann/Zoomer/main/plugin_template/swinfo.json",
   "ksp2_version": {
     "min": "0.2.0",
